@@ -27,6 +27,10 @@ if [ -n "$AWS_S3_ENDPOINT" ]; then
   ENDPOINT_APPEND="--endpoint-url $AWS_S3_ENDPOINT"
 fi
 
+if [ -z "$RUN_BUILD_STEP" ]; then
+  RUN_BUILD_STEP=true
+fi
+
 # Override default NODE_ENV (production) if set by user.
 NODE_ENV_PREPEND="NODE_ENV=${NODE_ENV:-production}"
 
@@ -53,12 +57,16 @@ EOF
 # - Build react bundle
 # - Sync using our dedicated profile and suppress verbose messages.
 #   All other flags are optional via the `args:` directive.
-sh -c "${PACKAGE_MANAGER}" \
-&& sh -c "${PACKAGE_MANAGER_COMMAND}" \
-&& sh -c "aws s3 sync ${SOURCE_DIR:-public} s3://${AWS_S3_BUCKET}/${DEST_DIR} \
-              --profile react-deploy-to-s3-action \
-              --no-progress \
-              ${ENDPOINT_APPEND} $*"
+
+if [ "$RUN_BUILD_STEP" = true ]; then
+  sh -c "${PACKAGE_MANAGER}" \
+  && sh -c "${PACKAGE_MANAGER_COMMAND}"
+fi
+
+sh -c "aws s3 sync ${SOURCE_DIR:-public} s3://${AWS_S3_BUCKET}/${DEST_DIR} \
+  --profile deploy-to-s3-action \
+  --no-progress \
+  ${ENDPOINT_APPEND} $*"
 SUCCESS=$?
 
 if [ $SUCCESS -eq 0 ]
