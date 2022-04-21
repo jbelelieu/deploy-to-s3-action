@@ -1,20 +1,36 @@
-![React](https://assets.jeanlescure.io/eooifcELx.svg)
-![arrow pointing right towards](https://assets.jeanlescure.io/eZA9H5.svg)
-![S3 Bucket](https://assets.jeanlescure.io/bJ4s8H8n.svg)
+# Deploy to S3 Github Action
 
-# React Deploy to S3 Github Action
+Allows you to deploy either a static website or React project to S3.
 
-Build a React.js web app and sync to an AWS S3 repository
+## Static Website Usage
 
-## Like this project? ❤️
+```yml
+name: Upload Static Website to S3
 
-Please consider:
+on:
+  push:
+    branches:
+    - master # Change to main if you use that instead
 
-- [Buying me a coffee](https://www.buymeacoffee.com/jeanlescure) ☕
-- Supporting me on [Patreon](https://www.patreon.com/jeanlescure) 🏆
-- Starring this repo on [Github](https://github.com/jeanlescure/react-deploy-to-s3-action) 🌟
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+    - uses: jbelelieu/react-deploy-to-s3-action@main
+      with:
+        args: --acl public-read --follow-symlinks --delete
+      env:
+        NODE_ENV: development # optional: defaults to production
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-west-1 # optional: defaults to us-east-1
+        SOURCE_DIR: . # Upload from the root directory of the repo
+        RUN_BUILD_STEP: false # Tells the action to skip the build steps.
+```
 
-## Usage
+## React Usage
 
 This action runs the equivalent of this oversimplified example:
 
@@ -44,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@main
-    - uses: jeanlescure/react-deploy-to-s3-action@main
+    - uses: jbelelieu/react-deploy-to-s3-action@main
       with:
         args: --acl public-read --follow-symlinks --delete
       env:
@@ -75,6 +91,7 @@ Sensitive information, especially `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY
 | `DEST_DIR` | The directory inside of the S3 bucket you wish to sync/upload to. For example, `my_project/assets`. Defaults to the root of the bucket. | `env` | No | `/` (root of bucket) |
 | `CLOUDFRONT_DISTRIBUTION_ID` | If you include a CloudFront Distribution Id using this variable, the action will run `aws cloudfront create-invalidation` for the wildcard path `*`, meaning it will completely flush the cache (Note: AWS considers this a single invalidation even though it affects all files in the distribution) so that the new changes synced to S3 are available immediately. | `secret env` | No | N/A |
 | `USE_NPM_OVER_YARN` | Set to true if you want to use NPM over Yarn. | `env` | No | false |
+| `RUN_BUILD_STEP` | Set to true if you are uploading a static website that doesn't need a build step. | `env` | No | false |
 
 ## TROUBLESHOOTING
 
