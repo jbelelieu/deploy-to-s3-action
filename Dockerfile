@@ -22,8 +22,8 @@ RUN apk add --no-cache \
       curl \
       unzip \
       python3 \
-      py3-pip && \
-    pip install awscli
+      py3-pip \
+      aws-cli
 
 # Set up entrypoint
 ENV PATH /github/workspace/node_modules/.bin:$PATH
